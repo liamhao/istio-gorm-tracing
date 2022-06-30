@@ -45,7 +45,7 @@ const (
 	_opRaw    = "raw"
 )
 
-func New(svcName string) gorm.Plugin {
+func New() gorm.Plugin {
 	return &IstioGormTracing{}
 }
 
