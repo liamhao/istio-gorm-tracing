@@ -30,25 +30,25 @@ func main() {
 
     router := gin.Default()
 
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local", "dbuser", "dbpswd", "dbhost", 3306, "dbname")
-	gormDb, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
-	if err != nil {
-		log.Println("mysql连接出现了问题：", err.Error())
-	} else {
-		log.Println("mysql连接成功：", dsn)
-	}
+    dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=utf8mb4&parseTime=True&loc=Local", "dbuser", "dbpswd", "dbhost", 3306, "dbname")
+    gormDb, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+    if err != nil {
+        log.Println("mysql连接出现了问题：", err.Error())
+    } else {
+        log.Println("mysql连接成功：", dsn)
+    }
 
     // 这一步很关键，一定要加上，为了启用我们的插件
     gormDb.Use(istiogormtracing.New())
 
-	router.GET("/", func(c *gin.Context) {
+    router.GET("/", func(c *gin.Context) {
 
         // 这一步很关键，一定要加上，为了SQL能与上下游服务做关联
         istiogormtracing.H = c.Request.Header
 
         // 执行查询
         list := []map[string]interface{}{}
-		gormDb.Debug().Table("users").Where("name = 'xiaoming'").Find(&list)
+        gormDb.Debug().Table("users").Where("name = 'xiaoming'").Find(&list)
 
         c.JSON(http.StatusOK, map[string]interface{}{
             "istiogormtracing": "ok",
