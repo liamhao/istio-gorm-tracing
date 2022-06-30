@@ -23,7 +23,7 @@ import (
     "fmt"
     "github.com/gin-gonic/gin"
     "gorm.io/driver/mysql"
-	"gorm.io/gorm"
+    "gorm.io/gorm"
 )
 
 func main() {
