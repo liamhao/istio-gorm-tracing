@@ -78,3 +78,7 @@ SQL的追踪正确插入到微服务的调用链之间
 搜索SQL的类型
 
 ![图片](https://cdn.learnku.com/uploads/images/202207/01/41543/Vd9KBqJAEr.png)
+
+多线程(goroutine)下的追踪效果
+
+![图片](https://cdn.learnku.com/uploads/images/202207/01/41543/PGL3ER9zLh.png)
