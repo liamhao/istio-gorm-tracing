@@ -2,6 +2,7 @@ package istiogormtracing
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"net/http"
 	"os"
@@ -140,11 +141,19 @@ func after(db *gorm.DB) {
 		span.LogFields(opentracinglog.Error(db.Error))
 	}
 
+	b, err := json.Marshal(db.Statement.Vars)
+	if err != nil {
+		span.LogFields(opentracinglog.Error(err))
+	}
+
 	// 记录其他内容
-	span.LogFields(opentracinglog.String("sql", db.Dialector.Explain(db.Statement.SQL.String(), db.Statement.Vars...)))
-	span.LogFields(opentracinglog.String("table", db.Statement.Table))
-	span.LogFields(opentracinglog.String("query", db.Statement.SQL.String()))
-	span.LogFields(opentracinglog.String("bindings", db.Statement.SQL.String()))
+	span.LogFields(
+		opentracinglog.String("sql", db.Dialector.Explain(db.Statement.SQL.String(), db.Statement.Vars...)),
+		opentracinglog.String("table", db.Statement.Table),
+		opentracinglog.String("query", db.Statement.SQL.String()),
+		opentracinglog.String("bindings", string(b)),
+	)
+
 }
 
 func beforeCreate(db *gorm.DB) {
