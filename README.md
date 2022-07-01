@@ -41,7 +41,7 @@ func main() {
     // 这一步很关键，一定要加上，为了启用我们的插件
     gormDb.Use(istiogormtracing.NewDefault(
         // 你的微服务名称
-        "istiogormtracing-plugin",
+        "istiogormtracing-service",
         // 你的 Jaeger 收集器地址
         "http://127.0.0.1:14268/api/traces",
     ))
