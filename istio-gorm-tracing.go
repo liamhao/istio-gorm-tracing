@@ -2,15 +2,23 @@ package istiogormtracing
 
 import (
 	"context"
+	"log"
 	"net/http"
+	"os"
 
 	"github.com/opentracing/opentracing-go"
 	opentracinglog "github.com/opentracing/opentracing-go/log"
+	"github.com/uber/jaeger-client-go"
+	"github.com/uber/jaeger-client-go/config"
+	jaegerlog "github.com/uber/jaeger-client-go/log"
 	"github.com/uber/jaeger-client-go/zipkin"
 	"gorm.io/gorm"
 )
 
-type IstioGormTracing struct{}
+type IstioGormTracing struct {
+	ServiceName       string
+	CollectorEndpoint string
+}
 
 var (
 	// 保留 Istio 发送请求时的 header 信息(x-b3-traceid|x-b3-parentspanid|x-b3-spanid|x-b3-sampled)
@@ -45,8 +53,14 @@ const (
 	_opRaw    = "raw"
 )
 
-func New() gorm.Plugin {
-	return &IstioGormTracing{}
+// 开箱即用，svcName: 此项目的微服务名称，collectorEndpoint: jaeger 收集器的地址(如:http://127.0.0.1:14268/api/traces)
+func NewDefault(svcName, collectorEndpoint string) gorm.Plugin {
+	i := &IstioGormTracing{
+		ServiceName:       svcName,
+		CollectorEndpoint: collectorEndpoint,
+	}
+	i.bootTracerBasedJaeger()
+	return i
 }
 
 // 实现 gorm 插件所需方法
@@ -57,7 +71,7 @@ func (p *IstioGormTracing) Name() string {
 // 实现 gorm 插件所需方法
 func (p *IstioGormTracing) Initialize(db *gorm.DB) (err error) {
 	// 在 gorm 中注册各种回调事件
-	return []error{
+	for _, e := range []error{
 		db.Callback().Create().Before("gorm:create").Register(_eventBeforeCreate, beforeCreate),
 		db.Callback().Create().After("gorm:create").Register(_eventAfterCreate, after),
 		db.Callback().Update().Before("gorm:update").Register(_eventBeforeUpdate, beforeUpdate),
@@ -70,7 +84,12 @@ func (p *IstioGormTracing) Initialize(db *gorm.DB) (err error) {
 		db.Callback().Row().After("gorm:row").Register(_eventAfterRow, after),
 		db.Callback().Raw().Before("gorm:raw").Register(_eventBeforeRaw, beforeRaw),
 		db.Callback().Raw().After("gorm:raw").Register(_eventAfterRaw, after),
-	}[0]
+	} {
+		if e != nil {
+			return e
+		}
+	}
+	return
 }
 
 // 注册各种前置事件时，对应的事件方法
@@ -150,4 +169,30 @@ func beforeRow(db *gorm.DB) {
 
 func beforeRaw(db *gorm.DB) {
 	_injectBefore(db, _opRaw)
+}
+
+// 默认初始化一个 jaeger tracer
+func (i IstioGormTracing) bootTracerBasedJaeger() {
+	// 基础配置
+	tracer, _, err := config.Configuration{
+		Sampler: &config.SamplerConfig{
+			Type:  jaeger.SamplerTypeConst,
+			Param: 1,
+		},
+		ServiceName: i.ServiceName,
+		Reporter: &config.ReporterConfig{
+			LogSpans:          true,
+			CollectorEndpoint: i.CollectorEndpoint,
+		},
+	}.NewTracer(
+		config.Logger(jaegerlog.StdLogger),
+	)
+
+	if err != nil {
+		log.Printf("jaeger tracer 插件初始化失败, 错误原因: %v", err)
+		os.Exit(1)
+	}
+
+	// 设为全局使用的 tracer
+	opentracing.SetGlobalTracer(tracer)
 }

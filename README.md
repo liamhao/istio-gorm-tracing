@@ -39,14 +39,18 @@ func main() {
     }
 
     // 这一步很关键，一定要加上，为了启用我们的插件
-    gormDb.Use(istiogormtracing.New())
+    gormDb.Use(istiogormtracing.NewDefault(
+        // 你的微服务名称
+        "istiogormtracing-plugin",
+        // 你的 Jaeger 收集器地址
+        "http://127.0.0.1:14268/api/traces",
+    ))
 
     router.GET("/", func(c *gin.Context) {
 
         // 这一步很关键，一定要加上，为了SQL能与上下游服务做关联
         istiogormtracing.H = c.Request.Header
 
-        // 执行查询
         list := []map[string]interface{}{}
         gormDb.Debug().Table("users").Where("name = 'xiaoming'").Find(&list)
 
@@ -55,9 +59,8 @@ func main() {
         })
     })
 
-    // 启动服务
     router.Run(":7000")
 }
 ```
 
-然后即可在`Jaeger`或`Zipkin`面板中看到我们记录的SQL了。
+然后即可在`Jaeger`面板中看到我们记录的SQL了。
