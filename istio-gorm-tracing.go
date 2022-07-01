@@ -65,12 +65,12 @@ func NewDefault(svcName, collectorEndpoint string) gorm.Plugin {
 }
 
 // 实现 gorm 插件所需方法
-func (p *IstioGormTracing) Name() string {
+func (i *IstioGormTracing) Name() string {
 	return "IstioGormTracing"
 }
 
 // 实现 gorm 插件所需方法
-func (p *IstioGormTracing) Initialize(db *gorm.DB) (err error) {
+func (i *IstioGormTracing) Initialize(db *gorm.DB) (err error) {
 	// 在 gorm 中注册各种回调事件
 	for _, e := range []error{
 		db.Callback().Create().Before("gorm:create").Register(_eventBeforeCreate, beforeCreate),
@@ -184,7 +184,7 @@ func beforeRaw(db *gorm.DB) {
 }
 
 // 默认初始化一个 jaeger tracer
-func (i IstioGormTracing) bootTracerBasedJaeger() {
+func (i *IstioGormTracing) bootTracerBasedJaeger() {
 	// 基础配置
 	tracer, _, err := config.Configuration{
 		Sampler: &config.SamplerConfig{
