@@ -52,7 +52,7 @@ func main() {
         istiogormtracing.H = c.Request.Header
 
         list := []map[string]interface{}{}
-        gormDb.Debug().Table("users").Where("name = 'xiaoming'").Find(&list)
+        gormDb.Table("users").Where("name = 'xiaoming'").Find(&list)
 
         c.JSON(http.StatusOK, map[string]interface{}{
             "istiogormtracing": "ok",
