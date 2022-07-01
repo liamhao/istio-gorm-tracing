@@ -69,12 +69,12 @@ func main() {
 
 SQL的追踪正确插入到微服务的调用链之间
 
-![图片](https://cdn.learnku.com/uploads/images/202207/01/41543/3IP5HGllbb.png)
+![图片](https://cdn.learnku.com/uploads/images/202207/01/41543/aPwL2WUFkC.png)
 
 详细记录了SQL的执行内容和消耗时间
 
-![图片](https://cdn.learnku.com/uploads/images/202207/01/41543/iOMmQ4bkPI.png)
+![图片](https://cdn.learnku.com/uploads/images/202207/01/41543/OOEcfaVgxU.png)
 
 搜索SQL的类型
 
-![图片](https://cdn.learnku.com/uploads/images/202207/01/41543/EcaYr8okEC.png)
+![图片](https://cdn.learnku.com/uploads/images/202207/01/41543/Vd9KBqJAEr.png)
