@@ -107,7 +107,10 @@ func _injectBefore(db *gorm.DB, op string) {
 
 	// 这里是关键，通过 istio 传过来的 header 解析出父 span，如果没有，则会创建新的根 span
 	zipkinPropagator := zipkin.NewZipkinB3HTTPHeaderPropagator()
-	spanCtx, _ := zipkinPropagator.Extract(opentracing.HTTPHeadersCarrier(H))
+	spanCtx, err := zipkinPropagator.Extract(opentracing.HTTPHeadersCarrier(H))
+	if err != nil {
+		log.Printf("jaeger span 解析失败, 错误原因: %v", err)
+	}
 	span, _ := opentracing.StartSpanFromContext(db.Statement.Context, op, opentracing.ChildOf(spanCtx))
 	db.InstanceSet(spankey, span)
 }
